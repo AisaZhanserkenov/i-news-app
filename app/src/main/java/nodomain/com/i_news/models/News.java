@@ -1,33 +1,22 @@
 package nodomain.com.i_news.models;
 
+import java.text.ParseException;
+import java.util.Date;
+
+import nodomain.com.i_news.utils.DateParser;
+
 /**
  * Created by mukhamed.issa on 5/27/16.
  */
-public class News {
+public class News extends AbstractModel {
 
-    private int id;
-    private String title;
     private String description_plain;
     private String text_plain;
     private Illustration illustration;
+    private String date;
+    private String url;
 
     public News() {}
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     public String getDescription_plain() {
         return description_plain;
@@ -55,5 +44,25 @@ public class News {
 
     public void setText_plain(String text_plain) {
         this.text_plain = text_plain;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public Date getConvertedDate() throws ParseException {
+        return DateParser.parse(date);
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
