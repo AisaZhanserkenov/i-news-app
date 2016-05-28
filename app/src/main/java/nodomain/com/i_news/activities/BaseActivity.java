@@ -13,15 +13,19 @@ import nodomain.com.i_news.Config;
 import nodomain.com.i_news.R;
 import nodomain.com.i_news.services.INewsService;
 import nodomain.com.i_news.services.ServiceFactory;
+import rx.subscriptions.CompositeSubscription;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
     private INewsService iNewsService;
 
+    protected CompositeSubscription compositeSubscription = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         iNewsService = ServiceFactory.createRetrofitService(INewsService.class, Config.BASE_URL);
+        compositeSubscription = new CompositeSubscription();
     }
 
     protected INewsService getiNewsService(){
@@ -40,4 +44,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         return info != null && info.isConnected();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        compositeSubscription.unsubscribe();
+    }
 }

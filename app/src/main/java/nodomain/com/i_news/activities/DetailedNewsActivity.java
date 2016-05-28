@@ -1,5 +1,6 @@
 package nodomain.com.i_news.activities;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -27,6 +28,8 @@ public class DetailedNewsActivity extends BaseActivity {
 
     private int id;
 
+    private Typeface typeface;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,9 @@ public class DetailedNewsActivity extends BaseActivity {
     protected void initUI() {
         title = (TextView) findViewById(R.id.detailed_news_title);
         text = (TextView) findViewById(R.id.news_text);
+        typeface = Typeface.createFromAsset(getAssets(), "roboto.ttf");
+        title.setTypeface(typeface);
+        text.setTypeface(typeface);
     }
 
     private void loadNewsData(){

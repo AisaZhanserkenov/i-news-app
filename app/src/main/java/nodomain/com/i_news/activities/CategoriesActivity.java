@@ -26,8 +26,6 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
     private RecyclerView recyclerView;
     private CategoriesAdapter categoriesAdapter;
 
-    private CompositeSubscription compositeSubscription = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +33,6 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        compositeSubscription = new CompositeSubscription();
 
         initUI();
         if(isFirstRun()){
@@ -43,8 +40,8 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
                 ORMFactory.getCategoryORM().delete(this);
                 loadCategoriesFromServer();
                 Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
-                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
-                        .putBoolean("isFirstRun", false).commit();
+//                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
+//                        .putBoolean("isFirstRun", false).commit();
             }else {
                 Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
             }
@@ -95,9 +92,4 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         startActivity(intent);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        compositeSubscription.unsubscribe();
-    }
 }

@@ -1,8 +1,10 @@
 package nodomain.com.i_news.utils;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by mukhamed.issa on 5/28/16.
@@ -27,5 +29,10 @@ public class DateParser {
 
         return df.parse(input);
 
+    }
+
+    public static String toString(Date input) throws ParseException{
+        DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.US);
+        return dateFormat.format(input);
     }
 }

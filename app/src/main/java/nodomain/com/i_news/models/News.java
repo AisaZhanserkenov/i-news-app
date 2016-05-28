@@ -8,7 +8,7 @@ import nodomain.com.i_news.utils.DateParser;
 /**
  * Created by mukhamed.issa on 5/27/16.
  */
-public class News extends AbstractModel {
+public class News extends AbstractModel implements Comparable<News>{
 
     private String description_plain;
     private String text_plain;
@@ -28,6 +28,9 @@ public class News extends AbstractModel {
     }
 
     public Illustration getIllustration() {
+        if(illustration == null){
+            illustration = new Illustration("no image", "no image");
+        }
         return illustration;
     }
 
@@ -73,5 +76,14 @@ public class News extends AbstractModel {
 
     public void setCategory(int category) {
         this.category = category;
+    }
+
+    @Override
+    public int compareTo(News o) {
+        try {
+            return o.getConvertedDate().compareTo(getConvertedDate());
+        } catch (ParseException e) {
+            return 0;
+        }
     }
 }

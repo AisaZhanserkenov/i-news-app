@@ -30,6 +30,9 @@ public class NewsORM implements IOrm<News> {
     private static final String COLUMN_ID_TYPE = "INTEGER PRIMARY KEY";
     private static final String COLUMN_ID = "id";
 
+    private static final String COLUMN_NEWS_ID_TYPE = "INTEGER";
+    private static final String COLUMN_NEWS_ID = "news_id";
+
     private static final String COLUMN_CATEGORY_ID_TYPE = "INTEGER";
     private static final String COLUMN_CATEGORY_ID = "category_id";
 
@@ -56,6 +59,7 @@ public class NewsORM implements IOrm<News> {
 
     public static final String SQL_CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
             COLUMN_ID + " " + COLUMN_ID_TYPE + COMMA_SEPARATOR +
+            COLUMN_NEWS_ID + " " + COLUMN_NEWS_ID_TYPE + COMMA_SEPARATOR +
             COLUMN_CATEGORY_ID + " " + COLUMN_CATEGORY_ID_TYPE + COMMA_SEPARATOR +
             COLUMN_TITLE  + " " + COLUMN_TITLE_TYPE + COMMA_SEPARATOR +
             COLUMN_DESCRIPTION + " " + COLUMN_DESCRIPTION_TYPE + COMMA_SEPARATOR +
@@ -85,7 +89,7 @@ public class NewsORM implements IOrm<News> {
     @Override
     public ContentValues objectToContentValues(News item) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_ID, item.getId());
+        contentValues.put(COLUMN_NEWS_ID, item.getId());
         contentValues.put(COLUMN_CATEGORY_ID, item.getCategory());
         contentValues.put(COLUMN_TITLE, item.getTitle());
         contentValues.put(COLUMN_DESCRIPTION, item.getDescription_plain());
@@ -138,7 +142,7 @@ public class NewsORM implements IOrm<News> {
     @Override
     public News cursorToObject(Cursor cursor) {
         News news = new News();
-        news.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_ID)));
+        news.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_NEWS_ID)));
         news.setCategory(cursor.getInt(cursor.getColumnIndex(COLUMN_CATEGORY_ID)));
         news.setTitle(cursor.getString(cursor.getColumnIndex(COLUMN_TITLE)));
         news.setDescription_plain(cursor.getString(cursor.getColumnIndex(COLUMN_DESCRIPTION)));

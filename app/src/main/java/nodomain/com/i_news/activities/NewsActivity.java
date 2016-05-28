@@ -1,9 +1,9 @@
 package nodomain.com.i_news.activities;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -11,21 +11,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
-import nodomain.com.i_news.Config;
 import nodomain.com.i_news.OnItemClickListener;
 import nodomain.com.i_news.R;
-import nodomain.com.i_news.adapters.CategoriesAdapter;
 import nodomain.com.i_news.adapters.NewsAdapter;
 import nodomain.com.i_news.models.News;
-import nodomain.com.i_news.services.INewsService;
-import nodomain.com.i_news.services.ServiceFactory;
-import nodomain.com.i_news.utils.DividerItemDecoration;
+import nodomain.com.i_news.utils.db.orm.ORMFactory;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -36,13 +29,18 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
 
     private TextView title;
     private TextView description;
+    private TextView toolbarTitle;
 
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private RecyclerView.LayoutManager layoutManager;
+
     private NewsAdapter newsAdapter;
 
     private int categoryId;
+
+    private Typeface typeface;
 
 
     @Override
@@ -50,20 +48,37 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_news);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle(getIntent().getStringExtra("category"));
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         categoryId = getIntent().getIntExtra("categoryId", 1);
         initUI();
-        loadNews();
+        toolbarTitle.setText(getIntent().getStringExtra("category"));
+//        if(isFirstRun()){
+//            if(isInternetAvailable()) {
+//                ORMFactory.getNewsORM().delete(this);
+//                loadNewsFromServer();
+//                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
+//                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
+//                        .putBoolean("isFirstRun", false).commit();
+//            }else {
+//                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
+//            }
+//        }else{
+//            loadNewsFromLocalDb();
+//        }
+
+        loadNewsFromServer();
     }
 
     @Override
     protected void initUI(){
+        typeface = Typeface.createFromAsset(getAssets(), "roboto.ttf");
         title = (TextView) findViewById(R.id.news_title);
         description = (TextView) findViewById(R.id.news_description);
-
+        toolbarTitle = (TextView) findViewById(R.id.toolbar_title);
+        toolbarTitle.setTypeface(typeface);
         recyclerView = (RecyclerView) findViewById(R.id.news_list);
         setupRecyclerView();
 
@@ -71,7 +86,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                loadNews();
+                loadNewsFromServer();
             }
         });
 
@@ -80,20 +95,44 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     private void setupRecyclerView(){
         newsAdapter = new NewsAdapter(this);
         newsAdapter.setClickListener(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(newsAdapter);
     }
 
-    public void loadNews(){
+    private void loadNewsFromServer(){
         newsAdapter.clear();
-        getiNewsService().getNewsByCategory(categoryId)
+        compositeSubscription.add(getiNewsService().getNewsByCategory(categoryId)
+                .flatMap(news -> Observable.from(news.getNews()))
+                .toSortedList(News::compareTo)
+                .flatMap(sorted -> Observable.from(sorted))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+//                .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
+                .subscribe(news -> {
+                            newsAdapter.addNews(news);
+                            swipeRefreshLayout.setRefreshing(false);
+                        }, error -> Log.e(TAG, error.getMessage())));
+    }
+
+    private void loadNewsFromLocalDb(){
+        compositeSubscription.add(ORMFactory.getNewsORM().get(this)
+                .flatMap(Observable::from)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(newsAdapter::addNews,
+                        error -> Log.e(TAG, error.getMessage())));
+    }
+
+    private void loadMore(){
+        getiNewsService().getMoreNews(categoryId)
                 .flatMap(news -> Observable.from(news.getNews()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(news -> {
-                            newsAdapter.addNews(news);
-                            swipeRefreshLayout.setRefreshing(false);
-                        }, error -> Log.e(TAG, error.getMessage()));
+                    newsAdapter.addNews(news);
+                }, error -> Log.e(TAG, error.getMessage()));
+
+        Log.i(TAG, "loading more news...");
     }
 
     @Override
@@ -120,4 +159,5 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         intent.putExtra("category", getIntent().getStringExtra("category"));
         startActivity(intent);
     }
+
 }
