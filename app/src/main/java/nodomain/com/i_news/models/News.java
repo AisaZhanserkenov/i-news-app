@@ -8,6 +8,7 @@ public class News {
     private int id;
     private String title;
     private String description_plain;
+    private String text_plain;
     private Illustration illustration;
 
     public News() {}
@@ -46,5 +47,13 @@ public class News {
 
     public boolean isIllustrationNull() {
         return illustration == null;
+    }
+
+    public String getText_plain() {
+        return text_plain;
+    }
+
+    public void setText_plain(String text_plain) {
+        this.text_plain = text_plain;
     }
 }

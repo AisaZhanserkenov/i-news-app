@@ -1,5 +1,6 @@
 package nodomain.com.i_news.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -114,6 +115,9 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, DetailedNewsActivity.class);
+        intent.putExtra("id", newsAdapter.getNews(position).getId());
+        intent.putExtra("category", getIntent().getStringExtra("category"));
+        startActivity(intent);
     }
 }
