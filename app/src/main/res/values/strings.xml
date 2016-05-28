@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">I-News</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_news">NewsActivity</string>
+    <string name="title_activity_categories">NewsActivity</string>
+    <string name="title_activity_base">BaseActivity</string>
+</resources>
