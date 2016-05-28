@@ -12,6 +12,7 @@ public class News extends AbstractModel {
 
     private String description_plain;
     private String text_plain;
+    private int category;
     private Illustration illustration;
     private String date;
     private String url;
@@ -64,5 +65,13 @@ public class News extends AbstractModel {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public int getCategory() {
+        return category;
+    }
+
+    public void setCategory(int category) {
+        this.category = category;
     }
 }

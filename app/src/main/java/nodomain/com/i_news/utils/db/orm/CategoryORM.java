@@ -8,9 +8,14 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import nodomain.com.i_news.models.Category;
+import nodomain.com.i_news.models.News;
 import nodomain.com.i_news.utils.db.DatabaseWrapper;
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by mukhamed.issa on 5/28/16.
@@ -34,7 +39,7 @@ public class CategoryORM implements IOrm<Category> {
     public static final String SQL_CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
             COLUMN_ID + " " + COLUMN_ID_TYPE + COMMA_SEPARATOR +
             COLUMN_TITLE  + " " + COLUMN_TITLE_TYPE + COMMA_SEPARATOR +
-            COLUMN_FULL_TITLE + " " + COLUMN_FULL_TITLE_TYPE + COMMA_SEPARATOR +
+            COLUMN_FULL_TITLE + " " + COLUMN_FULL_TITLE_TYPE +
             ")";
 
     public static final String SQL_DROP_TABLE =
@@ -54,35 +59,45 @@ public class CategoryORM implements IOrm<Category> {
     @Override
     public ContentValues objectToContentValues(Category item) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_ID, item.getId());
         contentValues.put(COLUMN_TITLE, item.getTitle());
         contentValues.put(COLUMN_FULL_TITLE, item.getFullTitle());
         return contentValues;
     }
 
     @Override
-    public List<Category> get(Context context) {
-        DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
-        SQLiteDatabase database = databaseWrapper.getReadableDatabase();
+    public Callable<List<Category>> get(Context context) {
 
-        Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
-        Log.i(TAG, "Loaded " + cursor.getCount() + " categories");
-        List<Category> categoryList = new ArrayList<Category>();
+        return new Callable<List<Category>>() {
+            @Override
+            public List<Category> call() throws Exception {
+                DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
+                SQLiteDatabase database = databaseWrapper.getReadableDatabase();
 
-        if(cursor.getCount() > 0){
-            cursor.moveToFirst();
-            while(!cursor.isAfterLast()){
-                Category category = cursorToObject(cursor);
-                categoryList.add(category);
-                cursor.moveToNext();
+                Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+                Log.i(TAG, "Loaded " + cursor.getCount() + " categories");
+                List<Category> categoryList = new ArrayList<Category>();
+
+                if(cursor.getCount() > 0){
+                    cursor.moveToFirst();
+                    while(!cursor.isAfterLast()){
+                        Category category = cursorToObject(cursor);
+                        categoryList.add(category);
+                        cursor.moveToNext();
+                    }
+                    Log.i(TAG, "Categories are loaded");
+                }
+
+                database.close();
+
+                return categoryList;
             }
-            Log.i(TAG, "Posts are loaded");
-        }
-
-        database.close();
-
-        return categoryList;
+        };
     }
+
+    public Observable<List<Category>> getCategories(Context context){
+        return makeObservable(get(context)).subscribeOn(Schedulers.computation());
+    }
+
 
     @Override
     public Category cursorToObject(Cursor cursor) {
@@ -93,4 +108,24 @@ public class CategoryORM implements IOrm<Category> {
 
         return category;
     }
+
+    @Override
+    public void delete(Context context) {
+        DatabaseWrapper wrapper = new DatabaseWrapper(context);
+        SQLiteDatabase database = wrapper.getWritableDatabase();
+        database.execSQL("DELETE FROM " + TABLE_NAME);
+
+        database.close();
+    }
+
+    private static <T> Observable<T> makeObservable(final Callable<T> func) {
+        return Observable.create(subscriber -> {
+            try {
+                subscriber.onNext(func.call());
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
+        });
+    }
+
 }

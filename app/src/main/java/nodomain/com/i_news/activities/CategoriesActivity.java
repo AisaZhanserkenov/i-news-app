@@ -1,5 +1,6 @@
 package nodomain.com.i_news.activities;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import nodomain.com.i_news.adapters.CategoriesAdapter;
 import nodomain.com.i_news.services.INewsService;
 import nodomain.com.i_news.services.ServiceFactory;
 import nodomain.com.i_news.utils.DividerItemDecoration;
+import nodomain.com.i_news.utils.db.orm.ORMFactory;
 import rx.Observable;
 import rx.Scheduler;
 import rx.android.schedulers.AndroidSchedulers;
@@ -44,7 +46,19 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         setSupportActionBar(toolbar);
 
         initUI();
-        loadCategories();
+        if(isFirstRun()){
+            if(isInternetAvailable()) {
+                ORMFactory.getCategoryORM().delete(this);
+                loadCategoriesFromServer();
+                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
+                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
+                        .putBoolean("isFirstRun", false).commit();
+            }else {
+                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
+            }
+        }else{
+            loadCategoriesFromLocalDb();
+        }
 
     }
 
@@ -62,13 +76,24 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         recyclerView.addItemDecoration(new DividerItemDecoration(this));
     }
 
-    private void loadCategories(){
+    private void loadCategoriesFromServer(){
         getiNewsService().getCategories()
                 .flatMap(Observable::from)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(category -> ORMFactory.getCategoryORM().insert(this.getBaseContext(), category))
                 .subscribe(categoriesAdapter::addCategory,
                         error -> Log.e(TAG, error.getMessage()));
+    }
+
+    private void loadCategoriesFromLocalDb(){
+        ORMFactory.getCategoryORM().getCategories(this)
+                .flatMap(Observable::from)
+                .observeOn(AndroidSchedulers.mainThread())
+                .limit(14)
+                .subscribe(categoriesAdapter::addCategory,
+                        error -> Log.e(TAG, error.getMessage()));
+        Log.d(TAG, "loaded");
     }
 
 

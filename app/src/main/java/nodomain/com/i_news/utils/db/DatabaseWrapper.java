@@ -5,6 +5,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import nodomain.com.i_news.utils.db.orm.CategoryORM;
+import nodomain.com.i_news.utils.db.orm.NewsORM;
+import nodomain.com.i_news.utils.db.orm.ORMFactory;
+
 /**
  * Created by mukhamed.issa on 5/28/16.
  */
@@ -24,10 +28,19 @@ public class DatabaseWrapper extends SQLiteOpenHelper{
     public void onCreate(SQLiteDatabase db) {
         Log.i(TAG, "Creating database [" + DATABASE_NAME + "]");
 
+        db.execSQL(CategoryORM.SQL_CREATE_TABLE);
+        db.execSQL(NewsORM.SQL_CREATE_TABLE);
+
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(TAG, "Upgrading database [" + DATABASE_NAME + "v." + oldVersion + "to v." + newVersion + "]");
+
+        db.execSQL(CategoryORM.SQL_DROP_TABLE);
+        db.execSQL(NewsORM.SQL_DROP_TABLE);
+
+        onCreate(db);
     }
 }

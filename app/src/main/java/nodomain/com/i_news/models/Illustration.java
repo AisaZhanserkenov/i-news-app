@@ -11,6 +11,11 @@ public class Illustration {
 
     public Illustration() {}
 
+    public Illustration(String small, String large) {
+        this.small = small;
+        this.large = large;
+    }
+
     public String getSmall() {
         return small;
     }
