@@ -65,7 +65,11 @@ public class CategoryORM implements IOrm<Category> {
     }
 
     @Override
-    public Callable<List<Category>> get(Context context) {
+    public Observable<List<Category>> get(Context context) {
+        return makeObservable(getCategories(context)).subscribeOn(Schedulers.computation());
+    }
+
+    private Callable<List<Category>> getCategories(Context context){
 
         return new Callable<List<Category>>() {
             @Override
@@ -94,10 +98,6 @@ public class CategoryORM implements IOrm<Category> {
         };
     }
 
-    public Observable<List<Category>> getCategories(Context context){
-        return makeObservable(get(context)).subscribeOn(Schedulers.computation());
-    }
-
 
     @Override
     public Category cursorToObject(Cursor cursor) {
@@ -118,7 +118,7 @@ public class CategoryORM implements IOrm<Category> {
         database.close();
     }
 
-    private static <T> Observable<T> makeObservable(final Callable<T> func) {
+    private <T> Observable<T> makeObservable(final Callable<T> func) {
         return Observable.create(subscriber -> {
             try {
                 subscriber.onNext(func.call());

@@ -14,6 +14,8 @@ import java.util.concurrent.Callable;
 import nodomain.com.i_news.models.Illustration;
 import nodomain.com.i_news.models.News;
 import nodomain.com.i_news.utils.db.DatabaseWrapper;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by mukhamed.issa on 5/28/16.
@@ -97,8 +99,11 @@ public class NewsORM implements IOrm<News> {
     }
 
     @Override
-    public Callable<List<News>> get(Context context) {
+    public Observable<List<News>> get(Context context) {
+        return makeObservable(getNews(context)).subscribeOn(Schedulers.computation());
+    }
 
+    private Callable<List<News>> getNews(Context context){
         return new Callable<List<News>>() {
             @Override
             public List<News> call() throws Exception {
@@ -123,10 +128,9 @@ public class NewsORM implements IOrm<News> {
                 return newsList;
             }
         };
-
     }
 
-    public Callable<List<News>> getNewsByCategory(Context context, int categoryId) {
+    public Observable<List<News>> getNewsByCategory(Context context, int categoryId) {
         this.categoryId = categoryId;
         return get(context);
     }
@@ -154,5 +158,15 @@ public class NewsORM implements IOrm<News> {
         database.execSQL("DELETE FROM " + TABLE_NAME);
 
         database.close();
+    }
+
+    private <T> Observable<T> makeObservable(final Callable<T> func) {
+        return Observable.create(subscriber -> {
+            try {
+                subscriber.onNext(func.call());
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
+        });
     }
 }

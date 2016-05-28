@@ -1,35 +1,23 @@
 package nodomain.com.i_news.activities;
 
-import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
-import nodomain.com.i_news.Config;
 import nodomain.com.i_news.OnItemClickListener;
 import nodomain.com.i_news.R;
 import nodomain.com.i_news.adapters.CategoriesAdapter;
-import nodomain.com.i_news.services.INewsService;
-import nodomain.com.i_news.services.ServiceFactory;
 import nodomain.com.i_news.utils.DividerItemDecoration;
 import nodomain.com.i_news.utils.db.orm.ORMFactory;
 import rx.Observable;
-import rx.Scheduler;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 public class CategoriesActivity extends BaseActivity implements OnItemClickListener{
 
@@ -38,12 +26,16 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
     private RecyclerView recyclerView;
     private CategoriesAdapter categoriesAdapter;
 
+    private CompositeSubscription compositeSubscription = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_categories);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        compositeSubscription = new CompositeSubscription();
 
         initUI();
         if(isFirstRun()){
@@ -77,23 +69,21 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
     }
 
     private void loadCategoriesFromServer(){
-        getiNewsService().getCategories()
+        compositeSubscription.add(getiNewsService().getCategories()
                 .flatMap(Observable::from)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(category -> ORMFactory.getCategoryORM().insert(this.getBaseContext(), category))
                 .subscribe(categoriesAdapter::addCategory,
-                        error -> Log.e(TAG, error.getMessage()));
+                        error -> Log.e(TAG, error.getMessage())));
     }
 
     private void loadCategoriesFromLocalDb(){
-        ORMFactory.getCategoryORM().getCategories(this)
+        compositeSubscription.add(ORMFactory.getCategoryORM().get(this)
                 .flatMap(Observable::from)
                 .observeOn(AndroidSchedulers.mainThread())
-                .limit(14)
                 .subscribe(categoriesAdapter::addCategory,
-                        error -> Log.e(TAG, error.getMessage()));
-        Log.d(TAG, "loaded");
+                        error -> Log.e(TAG, error.getMessage())));
     }
 
 
@@ -103,5 +93,11 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         intent.putExtra("category", categoriesAdapter.getCategory(position).getFullTitle());
         intent.putExtra("categoryId", categoriesAdapter.getCategory(position).getId());
         startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        compositeSubscription.unsubscribe();
     }
 }
