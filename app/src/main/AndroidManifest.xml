@@ -29,6 +29,11 @@
             android:name=".activities.DetailedNewsActivity"
             android:label="@string/title_activity_detailed_news"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <activity
+            android:name=".activities.BaseActivity"
+            android:label="@string/title_activity_detailed_news"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

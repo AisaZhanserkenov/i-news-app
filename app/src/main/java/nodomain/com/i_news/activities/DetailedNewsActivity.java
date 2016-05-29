@@ -2,6 +2,7 @@ package nodomain.com.i_news.activities;
 
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +27,8 @@ public class DetailedNewsActivity extends BaseActivity {
     private TextView title;
     private TextView text;
 
+    private CollapsingToolbarLayout collapsingToolbarLayout;
+
     private int id;
 
     private Typeface typeface;
@@ -49,9 +52,14 @@ public class DetailedNewsActivity extends BaseActivity {
     protected void initUI() {
         title = (TextView) findViewById(R.id.detailed_news_title);
         text = (TextView) findViewById(R.id.news_text);
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
         typeface = Typeface.createFromAsset(getAssets(), "roboto.ttf");
         title.setTypeface(typeface);
         text.setTypeface(typeface);
+        collapsingToolbarLayout.setCollapsedTitleTypeface(typeface);
+        collapsingToolbarLayout.setExpandedTitleTypeface(typeface);
+
+
     }
 
     private void loadNewsData(){

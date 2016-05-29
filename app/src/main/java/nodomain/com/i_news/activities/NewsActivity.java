@@ -161,8 +161,13 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == android.R.id.home) {
-            finish();
+        switch (id) {
+            case android.R.id.home:
+                finish();
+                break;
+            case R.id.action_refresh:
+                loadNewsFromServer();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
