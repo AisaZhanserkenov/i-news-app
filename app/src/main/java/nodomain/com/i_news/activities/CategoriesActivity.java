@@ -9,6 +9,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import nodomain.com.i_news.listeners.OnItemClickListener;
@@ -27,6 +29,8 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
 
     private RecyclerView recyclerView;
     private CategoriesAdapter categoriesAdapter;
+    private TextView toolbarTitle;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,19 +38,14 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         setContentView(R.layout.activity_categories);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         initUI();
-        if(AppUtils.isFirstRun(this)){
-            if(AppUtils.isInternetAvailable(this)) {
-                ORMFactory.getCategoryORM().delete(this);
-                loadFromServer();
-                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
-//                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
-//                        .putBoolean("isFirstRun", false).commit();
-            }else {
-                AppUtils.showErrorDialog(this);
-            }
-        }else{
+        if(AppUtils.isInternetAvailable(this)) {
+            ORMFactory.getCategoryORM().delete(this);
+            loadFromServer();
+        }else {
+            AppUtils.showSnackbar(findViewById(R.id.base_layout), this);
             loadFromLocalDb();
         }
 
@@ -55,6 +54,10 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
     @Override
     protected void initUI(){
         recyclerView = (RecyclerView) findViewById(R.id.categories);
+        toolbarTitle = (TextView) findViewById(R.id.toolbar_title);
+        toolbarTitle.setTypeface(AppUtils.getTypeface(this));
+        toolbarTitle.setText(getResources().getString(R.string.i_news));
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
         setupRecyclerView();
     }
 
@@ -68,17 +71,21 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
 
     @Override
     protected void loadFromServer(){
+        changeStateOfProgressBar(true);
         compositeSubscription.add(getiNewsService().getCategories()
                 .flatMap(Observable::from)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(category -> ORMFactory.getCategoryORM().insert(this.getBaseContext(), category))
-                .subscribe(categoriesAdapter::addCategory,
-                        error -> Log.e(TAG, error.getMessage())));
+                .subscribe(category -> {
+                    categoriesAdapter.addCategory(category);
+                    changeStateOfProgressBar(false);
+                }, error -> Log.e(TAG, error.getMessage())));
     }
 
     @Override
     protected void loadFromLocalDb(){
+        changeStateOfProgressBar(false);
         compositeSubscription.add(ORMFactory.getCategoryORM().get(this)
                 .flatMap(Observable::from)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -93,6 +100,11 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         intent.putExtra("category", categoriesAdapter.getCategory(position).getFullTitle());
         intent.putExtra("categoryId", categoriesAdapter.getCategory(position).getId());
         startActivity(intent);
+    }
+
+    private void changeStateOfProgressBar(boolean isVisible){
+        progressBar.setVisibility(isVisible ? View.VISIBLE: View.GONE);
+        progressBar.setIndeterminate(isVisible);
     }
 
 

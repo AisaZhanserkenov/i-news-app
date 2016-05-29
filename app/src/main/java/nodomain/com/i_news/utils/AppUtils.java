@@ -1,10 +1,13 @@
 package nodomain.com.i_news.utils;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
+import android.view.View;
 
 import nodomain.com.i_news.R;
 
@@ -39,7 +42,14 @@ public class AppUtils {
                         (dialog, id) -> dialog.cancel());
         AlertDialog alert = builder.create();
         alert.show();
+    }
 
+    public static void showSnackbar(View view, Context context){
+        Snackbar snackbar = Snackbar.make(view, context.getResources().getString(R.string.error_details),
+                Snackbar.LENGTH_INDEFINITE);
+        snackbar.setActionTextColor(Color.WHITE);
+        snackbar.setAction("Закрыть", v -> snackbar.dismiss());
+        snackbar.show();
     }
 
 }

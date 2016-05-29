@@ -59,17 +59,10 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         categoryId = getIntent().getIntExtra("categoryId", 1);
         initUI();
         toolbarTitle.setText(getIntent().getStringExtra("category"));
-        if(AppUtils.isFirstRun(this)){
-            if(AppUtils.isInternetAvailable(this)) {
-                ORMFactory.getNewsORM().delete(this);
-                loadFromServer();
-                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
-                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
-                        .putBoolean("isFirstRun", false).commit();
-            }else {
-                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
-            }
-        }else{
+        if(AppUtils.isInternetAvailable(this)) {
+            loadFromServer();
+        }else {
+            AppUtils.showSnackbar(findViewById(R.id.base_layout), this);
             loadFromLocalDb();
         }
 
@@ -102,25 +95,31 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
 
     @Override
     protected void loadFromServer(){
-        newsAdapter.clear();
-        changeStateOfProgressBar(true);
-        compositeSubscription.add(getiNewsService().getNewsByCategory(categoryId)
-                .flatMap(news -> Observable.from(news.getNews()))
-                .toSortedList(News::compareTo)
-                .flatMap(sorted -> Observable.from(sorted))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
-                .subscribe(news -> {
-                            newsAdapter.removeProgressBar();
-                            newsAdapter.addNews(news);
-                            swipeRefreshLayout.setRefreshing(false);
-                            changeStateOfProgressBar(false);
-                        }, error -> Log.e(TAG, error.getMessage())));
+        if(AppUtils.isInternetAvailable(this)) {
+            newsAdapter.clear();
+            changeStateOfProgressBar(true);
+            compositeSubscription.add(getiNewsService().getNewsByCategory(categoryId)
+                    .flatMap(news -> Observable.from(news.getNews()))
+                    .toSortedList(News::compareTo)
+                    .flatMap(sorted -> Observable.from(sorted))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
+                    .subscribe(news -> {
+                        newsAdapter.removeProgressBar();
+                        newsAdapter.addNews(news);
+                        swipeRefreshLayout.setRefreshing(false);
+                        changeStateOfProgressBar(false);
+                    }, error -> Log.e(TAG, error.getMessage())));
+        }else {
+            AppUtils.showSnackbar(findViewById(R.id.base_layout), this);
+            swipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     @Override
     protected void loadFromLocalDb(){
+        changeStateOfProgressBar(false);
         compositeSubscription.add(ORMFactory.getNewsORM().getNewsByCategory(this, categoryId)
                 .flatMap(Observable::from)
                 .observeOn(AndroidSchedulers.mainThread())

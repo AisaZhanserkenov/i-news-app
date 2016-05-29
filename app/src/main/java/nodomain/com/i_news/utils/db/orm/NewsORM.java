@@ -57,9 +57,12 @@ public class NewsORM implements IOrm<News> {
     private static final String COLUMN_DATE_TYPE = "TEXT";
     private static final String COLUMN_DATE = "date";
 
+    private static final String UNIQUE_CONSTRAINT = "UNIQUE";
+    private static final String ON_CONFLICT_CLAUSE = "ON CONFLICT REPLACE";
+
     public static final String SQL_CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
             COLUMN_ID + " " + COLUMN_ID_TYPE + COMMA_SEPARATOR +
-            COLUMN_NEWS_ID + " " + COLUMN_NEWS_ID_TYPE + COMMA_SEPARATOR +
+            COLUMN_NEWS_ID + " " + COLUMN_NEWS_ID_TYPE + " " + UNIQUE_CONSTRAINT + " " + ON_CONFLICT_CLAUSE + COMMA_SEPARATOR +
             COLUMN_CATEGORY_ID + " " + COLUMN_CATEGORY_ID_TYPE + COMMA_SEPARATOR +
             COLUMN_TITLE  + " " + COLUMN_TITLE_TYPE + COMMA_SEPARATOR +
             COLUMN_DESCRIPTION + " " + COLUMN_DESCRIPTION_TYPE + COMMA_SEPARATOR +
@@ -78,11 +81,14 @@ public class NewsORM implements IOrm<News> {
     @Override
     public void insert(Context context, News item) {
         DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
-        SQLiteDatabase database = databaseWrapper.getReadableDatabase();
+        SQLiteDatabase database = databaseWrapper.getWritableDatabase();
         ContentValues contentValues = objectToContentValues(item);
         database.insert(TABLE_NAME, "null", contentValues);
 
+        Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+
         Log.i(TAG, "Inserted news with id: " + item.getId());
+        Log.i(TAG, "There are " + cursor.getCount() + " news");
         database.close();
     }
 

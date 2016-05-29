@@ -12,4 +12,5 @@
     <string name="date">Дата: </string>
     <string name="url">Источник: </string>
     <string name="title_activity_web_view">WebViewActivity</string>
+    <string name="i_news">I-News</string>
 </resources>
