@@ -28,11 +28,14 @@
         <activity
             android:name=".activities.DetailedNewsActivity"
             android:label="@string/title_activity_detailed_news"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
-
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.BaseActivity"
             android:label="@string/title_activity_detailed_news"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.WebViewActivity"
+            android:label="@string/title_activity_web_view"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

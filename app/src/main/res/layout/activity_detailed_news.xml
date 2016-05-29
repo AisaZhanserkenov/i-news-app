@@ -58,7 +58,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/detailed_news_title"
-                android:text="Title"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentStart="true"
@@ -69,13 +68,56 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/news_text"
-                android:text="Text"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:layout_below="@+id/detailed_news_title"
                 android:layout_alignParentStart="true"
                 android:layout_marginStart="15dp"
                 android:layout_marginEnd="15dp"
                 android:layout_marginTop="27dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/date"
+                android:text="date"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_below="@+id/news_text"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="27dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/source"
+                android:text="url"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_below="@+id/date"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="15dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_below="@+id/source"
+                android:id="@+id/also_read"
+                android:text="Читайте также"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="27dp"/>
+
+
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/similar_news_list"
+                android:layout_below="@+id/also_read"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
         </RelativeLayout>
 
     </android.support.v4.widget.NestedScrollView>

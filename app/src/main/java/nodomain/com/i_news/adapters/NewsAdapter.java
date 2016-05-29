@@ -20,12 +20,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import nodomain.com.i_news.OnItemClickListener;
-import nodomain.com.i_news.OnLoadMoreListener;
+import nodomain.com.i_news.listeners.OnItemClickListener;
+import nodomain.com.i_news.listeners.OnLoadMoreListener;
 import nodomain.com.i_news.R;
-import nodomain.com.i_news.models.AbstractModel;
-import nodomain.com.i_news.models.Category;
 import nodomain.com.i_news.models.News;
+import nodomain.com.i_news.utils.AppUtils;
 import nodomain.com.i_news.utils.DateParser;
 
 /**
@@ -69,13 +68,13 @@ public class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
                             lastVisibleItem = linearLayoutManager
                                     .findLastVisibleItemPosition();
 
-                            Log.d(TAG, "Last visible " + lastVisibleItem);
-                            Log.d(TAG, "Item count " + totalItemCount);
                             if (!loading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                                if (onLoadMoreListener != null) {
-                                    onLoadMoreListener.onLoadMore();
+                                if (AppUtils.isInternetAvailable(context)) {
+                                    if (onLoadMoreListener != null) {
+                                        onLoadMoreListener.onLoadMore();
+                                    }
+                                    loading = true;
                                 }
-                                loading = true;
                             }
                         }
                     });
@@ -158,7 +157,7 @@ public class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         this.onLoadMoreListener = onLoadMoreListener;
     }
 
-    public class NewsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class NewsViewHolder extends RecyclerView.ViewHolder {
 
         private TextView title;
         private TextView description;
@@ -170,32 +169,27 @@ public class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
         public NewsViewHolder(View itemView) {
             super(itemView);
-            itemView.setOnClickListener(this);
+            itemView.setOnClickListener(view -> listener.onItemClick(view, getAdapterPosition()));
             title = (TextView)itemView.findViewById(R.id.news_title);
             description = (TextView) itemView.findViewById(R.id.news_description);
             date = (TextView) itemView.findViewById(R.id.date);
             sourceUrl = (TextView) itemView.findViewById(R.id.source_url);
             thumbnail = (ImageView) itemView.findViewById(R.id.thumbnail);
 
-            typeface = Typeface.createFromAsset(context.getAssets(), "roboto.ttf");
-            sourceUrl.setTypeface(typeface);
-            title.setTypeface(typeface);
-            date.setTypeface(typeface);
-            description.setTypeface(typeface);
+            sourceUrl.setTypeface(AppUtils.getTypeface(context));
+            title.setTypeface(AppUtils.getTypeface(context));
+            date.setTypeface(AppUtils.getTypeface(context));
+            description.setTypeface(AppUtils.getTypeface(context));
         }
 
         public void bind(final News news){
-            if(news.getTitle().length() > 85){
-                title.setText(news.getTitle().substring(0, 85));
+            if(news.getTitle().length() > 75){
+                title.setText(news.getTitle().substring(0, 75).concat("..."));
             }else {
                 title.setText(news.getTitle());
             }
             description.setText(Html.fromHtml(news.getDescription_plain()));
-            try {
-                date.setText(DateParser.toString(news.getConvertedDate()));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            date.setText(DateParser.toString(news.getConvertedDate()));
             sourceUrl.setText(news.getUrl());
             if(!news.isIllustrationNull()){
                 Picasso.with(context)
@@ -205,12 +199,6 @@ public class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
             }
         }
 
-        @Override
-        public void onClick(View v) {
-            if(listener != null){
-                listener.onItemClick(v, getAdapterPosition());
-            }
-        }
     }
 
     public static class ProgressViewHolder extends RecyclerView.ViewHolder {

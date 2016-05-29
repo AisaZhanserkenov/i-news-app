@@ -1,12 +1,10 @@
-package nodomain.com.i_news;
+package nodomain.com.i_news.listeners;
 
 import android.view.View;
-
 
 /**
  * Created by mukhamed.issa on 5/27/16.
  */
-
 
 public interface OnItemClickListener {
     void onItemClick(View view, int position);

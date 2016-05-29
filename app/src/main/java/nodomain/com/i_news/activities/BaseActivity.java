@@ -33,16 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected abstract void initUI();
-
-    protected boolean isFirstRun() {
-        return getSharedPreferences("PREFERENCES", MODE_PRIVATE).getBoolean("isFirstRun", true);
-    }
-
-    protected boolean isInternetAvailable(){
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(this.CONNECTIVITY_SERVICE);
-        NetworkInfo info = manager.getActiveNetworkInfo();
-        return info != null && info.isConnected();
-    }
+    protected abstract void loadFromServer();
+    protected abstract void loadFromLocalDb();
 
     @Override
     protected void onDestroy() {

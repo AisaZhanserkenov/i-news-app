@@ -31,6 +31,8 @@ public class DatabaseWrapper extends SQLiteOpenHelper{
         db.execSQL(CategoryORM.SQL_CREATE_TABLE);
         db.execSQL(NewsORM.SQL_CREATE_TABLE);
 
+        Log.i(TAG, NewsORM.SQL_CREATE_TABLE);
+
 
     }
 

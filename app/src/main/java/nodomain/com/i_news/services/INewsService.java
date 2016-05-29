@@ -22,6 +22,7 @@ public interface INewsService {
     public static final String NEWS_GET_BY_CATEGORY = "/news/search?" + Config.AUTH + "&limit=20";
     public static final String NEWS_LOAD_MORE = "/news/search?" + Config.AUTH + "&limit=20";
     public static final String NEWS_GET_BY_ID = "/news/get-one?" + Config.AUTH;
+    public static final String NEWS_GET_SIMILAR = "/news/more-like-this?" + Config.AUTH + "&limit=5";
 
     @GET(CATEGORIES_GET_ALL)
     Observable<List<Category>> getCategories();
@@ -31,6 +32,9 @@ public interface INewsService {
 
     @GET(NEWS_GET_BY_ID)
     Observable<News> getNewsById(@Query("id") int newsId);
+
+    @GET(NEWS_GET_SIMILAR)
+    Observable<NewsResponse> getSimilarNews(@Query("id") int newsId);
 
     @GET(NEWS_LOAD_MORE)
     Observable<NewsResponse> getMoreNews(@Query("query[cat_id]") int categoryId,

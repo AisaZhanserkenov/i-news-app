@@ -1,7 +1,6 @@
 package nodomain.com.i_news.activities;
 
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,16 +10,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.concurrent.TimeUnit;
 
-import nodomain.com.i_news.OnItemClickListener;
-import nodomain.com.i_news.OnLoadMoreListener;
+import nodomain.com.i_news.listeners.OnItemClickListener;
+import nodomain.com.i_news.listeners.OnLoadMoreListener;
 import nodomain.com.i_news.R;
 import nodomain.com.i_news.adapters.NewsAdapter;
 import nodomain.com.i_news.models.News;
+import nodomain.com.i_news.utils.AppUtils;
 import nodomain.com.i_news.utils.db.orm.ORMFactory;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -37,13 +38,13 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private ProgressBar progressBar;
+
     private RecyclerView.LayoutManager layoutManager;
 
     private NewsAdapter newsAdapter;
 
     private int categoryId;
-
-    private Typeface typeface;
 
 
     @Override
@@ -58,40 +59,35 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         categoryId = getIntent().getIntExtra("categoryId", 1);
         initUI();
         toolbarTitle.setText(getIntent().getStringExtra("category"));
-//        if(isFirstRun()){
-//            if(isInternetAvailable()) {
-//                ORMFactory.getNewsORM().delete(this);
-//                loadNewsFromServer();
-//                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
-//                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
-//                        .putBoolean("isFirstRun", false).commit();
-//            }else {
-//                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
-//            }
-//        }else{
-//            loadNewsFromLocalDb();
-//        }
+        if(AppUtils.isFirstRun(this)){
+            if(AppUtils.isInternetAvailable(this)) {
+                ORMFactory.getNewsORM().delete(this);
+                loadFromServer();
+                Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
+                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
+                        .putBoolean("isFirstRun", false).commit();
+            }else {
+                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
+            }
+        }else{
+            loadFromLocalDb();
+        }
 
-        loadNewsFromServer();
     }
 
     @Override
     protected void initUI(){
-        typeface = Typeface.createFromAsset(getAssets(), "roboto.ttf");
         title = (TextView) findViewById(R.id.news_title);
         description = (TextView) findViewById(R.id.news_description);
         toolbarTitle = (TextView) findViewById(R.id.toolbar_title);
-        toolbarTitle.setTypeface(typeface);
+        toolbarTitle.setTypeface(AppUtils.getTypeface(this));
         recyclerView = (RecyclerView) findViewById(R.id.news_list);
         setupRecyclerView();
 
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.content_news);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                loadNewsFromServer();
-            }
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::loadFromServer);
+
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 
     }
 
@@ -101,33 +97,31 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
         newsAdapter = new NewsAdapter(this, recyclerView);
         recyclerView.setAdapter(newsAdapter);
         newsAdapter.setClickListener(this);
-        newsAdapter.setOnLoadMoreListener(new OnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                newsAdapter.addNews(null);
-                loadMore();
-            }
-        });
+        newsAdapter.setOnLoadMoreListener(this::loadMore);
     }
 
-    private void loadNewsFromServer(){
+    @Override
+    protected void loadFromServer(){
         newsAdapter.clear();
+        changeStateOfProgressBar(true);
         compositeSubscription.add(getiNewsService().getNewsByCategory(categoryId)
                 .flatMap(news -> Observable.from(news.getNews()))
                 .toSortedList(News::compareTo)
                 .flatMap(sorted -> Observable.from(sorted))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-//                .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
+                .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
                 .subscribe(news -> {
                             newsAdapter.removeProgressBar();
                             newsAdapter.addNews(news);
                             swipeRefreshLayout.setRefreshing(false);
+                            changeStateOfProgressBar(false);
                         }, error -> Log.e(TAG, error.getMessage())));
     }
 
-    private void loadNewsFromLocalDb(){
-        compositeSubscription.add(ORMFactory.getNewsORM().get(this)
+    @Override
+    protected void loadFromLocalDb(){
+        compositeSubscription.add(ORMFactory.getNewsORM().getNewsByCategory(this, categoryId)
                 .flatMap(Observable::from)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(newsAdapter::addNews,
@@ -135,6 +129,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     }
 
     private void loadMore(){
+        newsAdapter.addNews(null);
         getiNewsService().getMoreNews(categoryId, newsAdapter.getItemCount())
                 .delay(1000, TimeUnit.MILLISECONDS)
                 .flatMap(news -> Observable.from(news.getNews()))
@@ -145,10 +140,13 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
                 .subscribe(news -> {
                     newsAdapter.addNews(news);
                     newsAdapter.removeProgressBar();
-                    Log.d(TAG, "loading more");
-                    Log.d(TAG, newsAdapter.getItemCount() + "items");
                 }, error -> Log.e(TAG, error.getMessage()));
 
+    }
+
+    private void changeStateOfProgressBar(boolean isVisible){
+        progressBar.setVisibility(isVisible ? View.VISIBLE: View.GONE);
+        progressBar.setIndeterminate(isVisible);
     }
 
     @Override
@@ -166,7 +164,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
                 finish();
                 break;
             case R.id.action_refresh:
-                loadNewsFromServer();
+                loadFromServer();
                 break;
         }
 

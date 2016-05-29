@@ -67,7 +67,7 @@ public class NewsORM implements IOrm<News> {
             COLUMN_ILLUSTRATION_SMALL + " " + COLUMN_ILLUSTRATION_SMALL_TYPE + COMMA_SEPARATOR +
             COLUMN_ILLUSTRATION_LARGE + " " + COLUMN_ILLUSTRATION_LARGE_TYPE + COMMA_SEPARATOR +
             COLUMN_URL + " " + COLUMN_URL_TYPE + COMMA_SEPARATOR +
-            COLUMN_DATE + COLUMN_DATE_TYPE +
+            COLUMN_DATE + " " + COLUMN_DATE_TYPE +
             ")";
 
     public static final String SQL_DROP_TABLE =

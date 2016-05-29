@@ -1,7 +1,9 @@
 package nodomain.com.i_news.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -9,15 +11,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import nodomain.com.i_news.OnItemClickListener;
+import nodomain.com.i_news.listeners.OnItemClickListener;
 import nodomain.com.i_news.R;
 import nodomain.com.i_news.adapters.CategoriesAdapter;
+import nodomain.com.i_news.utils.AppUtils;
 import nodomain.com.i_news.utils.DividerItemDecoration;
 import nodomain.com.i_news.utils.db.orm.ORMFactory;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
-import rx.subscriptions.CompositeSubscription;
 
 public class CategoriesActivity extends BaseActivity implements OnItemClickListener{
 
@@ -33,20 +35,19 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         initUI();
-        if(isFirstRun()){
-            if(isInternetAvailable()) {
+        if(AppUtils.isFirstRun(this)){
+            if(AppUtils.isInternetAvailable(this)) {
                 ORMFactory.getCategoryORM().delete(this);
-                loadCategoriesFromServer();
+                loadFromServer();
                 Toast.makeText(this, "First run", Toast.LENGTH_LONG).show();
 //                getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
 //                        .putBoolean("isFirstRun", false).commit();
             }else {
-                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
+                AppUtils.showErrorDialog(this);
             }
         }else{
-            loadCategoriesFromLocalDb();
+            loadFromLocalDb();
         }
 
     }
@@ -58,14 +59,15 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
     }
 
     private void setupRecyclerView(){
-        categoriesAdapter = new CategoriesAdapter();
+        categoriesAdapter = new CategoriesAdapter(this);
         categoriesAdapter.setClickListener(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(categoriesAdapter);
         recyclerView.addItemDecoration(new DividerItemDecoration(this));
     }
 
-    private void loadCategoriesFromServer(){
+    @Override
+    protected void loadFromServer(){
         compositeSubscription.add(getiNewsService().getCategories()
                 .flatMap(Observable::from)
                 .subscribeOn(Schedulers.io())
@@ -75,7 +77,8 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
                         error -> Log.e(TAG, error.getMessage())));
     }
 
-    private void loadCategoriesFromLocalDb(){
+    @Override
+    protected void loadFromLocalDb(){
         compositeSubscription.add(ORMFactory.getCategoryORM().get(this)
                 .flatMap(Observable::from)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -91,5 +94,6 @@ public class CategoriesActivity extends BaseActivity implements OnItemClickListe
         intent.putExtra("categoryId", categoriesAdapter.getCategory(position).getId());
         startActivity(intent);
     }
+
 
 }

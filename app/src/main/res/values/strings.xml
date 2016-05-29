@@ -5,4 +5,11 @@
     <string name="title_activity_categories">NewsActivity</string>
     <string name="title_activity_base">BaseActivity</string>
     <string name="title_activity_detailed_news">DetailedNewsActivity</string>
+
+    <string name="error">Ошибка</string>
+    <string name="error_details">Нету подключения к интернету</string>
+    <string name="close">Закрыть</string>
+    <string name="date">Дата: </string>
+    <string name="url">Источник: </string>
+    <string name="title_activity_web_view">WebViewActivity</string>
 </resources>

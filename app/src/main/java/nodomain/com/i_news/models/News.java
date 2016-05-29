@@ -58,7 +58,7 @@ public class News extends AbstractModel implements Comparable<News>{
         this.date = date;
     }
 
-    public Date getConvertedDate() throws ParseException {
+    public Date getConvertedDate(){
         return DateParser.parse(date);
     }
 
@@ -80,10 +80,6 @@ public class News extends AbstractModel implements Comparable<News>{
 
     @Override
     public int compareTo(News o) {
-        try {
-            return o.getConvertedDate().compareTo(getConvertedDate());
-        } catch (ParseException e) {
-            return 0;
-        }
+        return o.getConvertedDate().compareTo(getConvertedDate());
     }
 }
