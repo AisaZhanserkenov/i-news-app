@@ -20,7 +20,7 @@ public interface INewsService {
 
     public static final String CATEGORIES_GET_ALL = "/category/get-all?" + Config.AUTH;
     public static final String NEWS_GET_BY_CATEGORY = "/news/search?" + Config.AUTH + "&limit=20";
-    public static final String NEWS_LOAD_MORE = "/news/search?" + Config.AUTH + "&limit=20&offset=20";
+    public static final String NEWS_LOAD_MORE = "/news/search?" + Config.AUTH + "&limit=20";
     public static final String NEWS_GET_BY_ID = "/news/get-one?" + Config.AUTH;
 
     @GET(CATEGORIES_GET_ALL)
@@ -33,6 +33,7 @@ public interface INewsService {
     Observable<News> getNewsById(@Query("id") int newsId);
 
     @GET(NEWS_LOAD_MORE)
-    Observable<NewsResponse> getMoreNews(@Query("query[cat_id]") int categoryId);
+    Observable<NewsResponse> getMoreNews(@Query("query[cat_id]") int categoryId,
+                                         @Query("offset") int offset);
 
 }

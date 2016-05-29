@@ -14,7 +14,10 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.TimeUnit;
+
 import nodomain.com.i_news.OnItemClickListener;
+import nodomain.com.i_news.OnLoadMoreListener;
 import nodomain.com.i_news.R;
 import nodomain.com.i_news.adapters.NewsAdapter;
 import nodomain.com.i_news.models.News;
@@ -93,11 +96,18 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     }
 
     private void setupRecyclerView(){
-        newsAdapter = new NewsAdapter(this);
-        newsAdapter.setClickListener(this);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
+        newsAdapter = new NewsAdapter(this, recyclerView);
         recyclerView.setAdapter(newsAdapter);
+        newsAdapter.setClickListener(this);
+        newsAdapter.setOnLoadMoreListener(new OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                newsAdapter.addNews(null);
+                loadMore();
+            }
+        });
     }
 
     private void loadNewsFromServer(){
@@ -110,6 +120,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
                 .observeOn(AndroidSchedulers.mainThread())
 //                .doOnNext(news -> ORMFactory.getNewsORM().insert(this.getBaseContext(), news))
                 .subscribe(news -> {
+                            newsAdapter.removeProgressBar();
                             newsAdapter.addNews(news);
                             swipeRefreshLayout.setRefreshing(false);
                         }, error -> Log.e(TAG, error.getMessage())));
@@ -124,15 +135,20 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
     }
 
     private void loadMore(){
-        getiNewsService().getMoreNews(categoryId)
+        getiNewsService().getMoreNews(categoryId, newsAdapter.getItemCount())
+                .delay(1000, TimeUnit.MILLISECONDS)
                 .flatMap(news -> Observable.from(news.getNews()))
+                .toSortedList(News::compareTo)
+                .flatMap(sorted -> Observable.from(sorted))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(news -> {
                     newsAdapter.addNews(news);
+                    newsAdapter.removeProgressBar();
+                    Log.d(TAG, "loading more");
+                    Log.d(TAG, newsAdapter.getItemCount() + "items");
                 }, error -> Log.e(TAG, error.getMessage()));
 
-        Log.i(TAG, "loading more news...");
     }
 
     @Override
