@@ -129,7 +129,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
 
     private void loadMore(){
         newsAdapter.addNews(null);
-        getiNewsService().getMoreNews(categoryId, newsAdapter.getItemCount())
+        compositeSubscription.add(getiNewsService().getMoreNews(categoryId, newsAdapter.getItemCount())
                 .delay(1000, TimeUnit.MILLISECONDS)
                 .flatMap(news -> Observable.from(news.getNews()))
                 .toSortedList(News::compareTo)
@@ -139,7 +139,7 @@ public class NewsActivity extends BaseActivity implements OnItemClickListener{
                 .subscribe(news -> {
                     newsAdapter.addNews(news);
                     newsAdapter.removeProgressBar();
-                }, error -> Log.e(TAG, error.getMessage()));
+                }, error -> Log.e(TAG, error.getMessage())));
 
     }
 

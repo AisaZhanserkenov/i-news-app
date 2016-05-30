@@ -42,6 +42,7 @@ public class DetailedNewsActivity extends BaseActivity implements OnItemClickLis
     private TextView text;
     private TextView date;
     private TextView source;
+    private TextView alsoRead;
 
     private ImageView backdrop;
     private RecyclerView recyclerView;
@@ -76,12 +77,14 @@ public class DetailedNewsActivity extends BaseActivity implements OnItemClickLis
         text = (TextView) findViewById(R.id.news_text);
         date = (TextView) findViewById(R.id.date);
         source = (TextView) findViewById(R.id.source);
+        alsoRead = (TextView) findViewById(R.id.also_read);
 
         collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
         title.setTypeface(AppUtils.getTypeface(this));
         text.setTypeface(AppUtils.getTypeface(this));
         date.setTypeface(AppUtils.getTypeface(this));
         source.setTypeface(AppUtils.getTypeface(this));
+        alsoRead.setTypeface(AppUtils.getTypeface(this));
         collapsingToolbarLayout.setCollapsedTitleTypeface(AppUtils.getTypeface(this));
         collapsingToolbarLayout.setExpandedTitleTypeface(AppUtils.getTypeface(this));
 
