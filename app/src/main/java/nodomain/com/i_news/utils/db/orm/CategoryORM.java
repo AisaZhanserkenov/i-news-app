@@ -71,30 +71,27 @@ public class CategoryORM implements IOrm<Category> {
 
     private Callable<List<Category>> getCategories(Context context){
 
-        return new Callable<List<Category>>() {
-            @Override
-            public List<Category> call() throws Exception {
-                DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
-                SQLiteDatabase database = databaseWrapper.getReadableDatabase();
+        return () -> {
+            DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
+            SQLiteDatabase database = databaseWrapper.getReadableDatabase();
 
-                Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
-                Log.i(TAG, "Loaded " + cursor.getCount() + " categories");
-                List<Category> categoryList = new ArrayList<Category>();
+            Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+            Log.i(TAG, "Loaded " + cursor.getCount() + " categories");
+            List<Category> categoryList = new ArrayList<Category>();
 
-                if(cursor.getCount() > 0){
-                    cursor.moveToFirst();
-                    while(!cursor.isAfterLast()){
-                        Category category = cursorToObject(cursor);
-                        categoryList.add(category);
-                        cursor.moveToNext();
-                    }
-                    Log.i(TAG, "Categories are loaded");
+            if(cursor.getCount() > 0){
+                cursor.moveToFirst();
+                while(!cursor.isAfterLast()){
+                    Category category = cursorToObject(cursor);
+                    categoryList.add(category);
+                    cursor.moveToNext();
                 }
-
-                database.close();
-
-                return categoryList;
+                Log.i(TAG, "Categories are loaded");
             }
+
+            database.close();
+
+            return categoryList;
         };
     }
 

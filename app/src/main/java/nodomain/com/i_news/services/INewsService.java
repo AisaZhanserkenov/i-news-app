@@ -18,11 +18,11 @@ import retrofit.http.GET;
  */
 public interface INewsService {
 
-    public static final String CATEGORIES_GET_ALL = "/category/get-all?" + Config.AUTH;
-    public static final String NEWS_GET_BY_CATEGORY = "/news/search?" + Config.AUTH + "&limit=20";
-    public static final String NEWS_LOAD_MORE = "/news/search?" + Config.AUTH + "&limit=20";
-    public static final String NEWS_GET_BY_ID = "/news/get-one?" + Config.AUTH;
-    public static final String NEWS_GET_SIMILAR = "/news/more-like-this?" + Config.AUTH + "&limit=5";
+    String CATEGORIES_GET_ALL = "/category/get-all?" + Config.AUTH;
+    String NEWS_GET_BY_CATEGORY = "/news/search?" + Config.AUTH + "&order[tstamp]=desc&limit=20";
+    String NEWS_LOAD_MORE = "/news/search?" + Config.AUTH + "&order[tstamp]=desc&limit=20";
+    String NEWS_GET_BY_ID = "/news/get-one?" + Config.AUTH;
+    String NEWS_GET_SIMILAR = "/news/more-like-this?" + Config.AUTH + "&limit=5";
 
     @GET(CATEGORIES_GET_ALL)
     Observable<List<Category>> getCategories();

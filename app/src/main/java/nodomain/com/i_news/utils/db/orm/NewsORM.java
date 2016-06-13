@@ -114,29 +114,26 @@ public class NewsORM implements IOrm<News> {
     }
 
     private Callable<List<News>> getNews(Context context){
-        return new Callable<List<News>>() {
-            @Override
-            public List<News> call() throws Exception {
-                DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
-                SQLiteDatabase database = databaseWrapper.getReadableDatabase();
-                Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_CATEGORY_ID + "=" + categoryId, null);
+        return () -> {
+            DatabaseWrapper databaseWrapper = new DatabaseWrapper(context);
+            SQLiteDatabase database = databaseWrapper.getReadableDatabase();
+            Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_CATEGORY_ID + "=" + categoryId, null);
 
-                Log.i(TAG, "Loaded " + cursor.getCount() + " news with category id: " + categoryId);
-                List<News> newsList = new ArrayList<News>();
+            Log.i(TAG, "Loaded " + cursor.getCount() + " news with category id: " + categoryId);
+            List<News> newsList = new ArrayList<News>();
 
-                if(cursor.getCount() > 0){
-                    cursor.moveToFirst();
-                    while(!cursor.isAfterLast()){
-                        News news = cursorToObject(cursor);
-                        newsList.add(news);
-                        cursor.moveToNext();
-                    }
-                    Log.i(TAG, "News are loaded");
+            if(cursor.getCount() > 0){
+                cursor.moveToFirst();
+                while(!cursor.isAfterLast()){
+                    News news = cursorToObject(cursor);
+                    newsList.add(news);
+                    cursor.moveToNext();
                 }
-                database.close();
-
-                return newsList;
+                Log.i(TAG, "News are loaded");
             }
+            database.close();
+
+            return newsList;
         };
     }
 
